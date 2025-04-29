@@ -24,7 +24,7 @@ public class Customer {
     @Column(nullable = false, length = 64)
     private String lastName;
 
-    @Column(nullable = false)
+    @Column(unique = true, nullable = false)
     private String email;
 
     @OneToMany(mappedBy = "customer", orphanRemoval = true, cascade = CascadeType.ALL)

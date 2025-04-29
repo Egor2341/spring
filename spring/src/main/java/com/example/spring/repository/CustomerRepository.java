@@ -24,7 +24,10 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     @Transactional
     @Query(
-            value = "EXPLAIN ANALYZE SELECT * FROM customers",
+            value = "EXPLAIN ANALYZE SELECT first_name, last_name, email " +
+                    "FROM customers " +
+                    "ORDER BY email " +
+                    "LIMIT 10;",
             nativeQuery = true
     )
     List<Map<String, Object>> selectAll();
@@ -63,39 +66,32 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
 
 
-    // SELECT u.email FROM User u WHERE EXISTS (SELECT 1 FROM Order o WHERE o.user = u)
     @Transactional
     @Query(
-            value = "EXPLAIN ANALYZE SELECT c.email, o.total FROM customers c JOIN orders o ON c.id = o.customer",
+            value = "EXPLAIN ANALYZE " +
+                    "SELECT c.email " +
+                    "FROM customers c " +
+                    "WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer = c.id)",
             nativeQuery = true
     )
     List<Map<String, Object>> selectEmailCustomerWithOrder();
 
 
-    //SELECT DISTINCT c.name
-    //FROM customers c
-    //INNER JOIN orders o ON c.id = o.customer_id
-    //WHERE o.total > 1000;
     @Transactional
-    @Query(value = "EXPLAIN ANALYZE SELECT email " +
-            "FROM customers " +
-            "WHERE id IN (SELECT customer FROM orders WHERE total > :total)",
+    @Query(value = "EXPLAIN ANALYZE SELECT DISTINCT c.email " +
+            "FROM customers c " +
+            "INNER JOIN orders o ON c.id = o.customer " +
+            "WHERE o.total > :total;",
             nativeQuery = true
     )
     List<Map<String, Object>> selectUserEmailsWithOrderMoreThan(int total);
 
 
-    //WITH avg_total AS (
-    //    SELECT AVG(total) AS avg_total
-    //    FROM orders
-    //)
-    //SELECT customer_id
-    //FROM orders, avg_total
-    //WHERE total > avg_total.avg_total;
     @Transactional
-    @Query(value = "EXPLAIN ANALYZE SELECT customer " +
-            "FROM orders " +
-            "WHERE total > (SELECT AVG(total) FROM orders)",
+    @Query(value = "EXPLAIN ANALYZE WITH avg_total AS (SELECT AVG(total) AS avg_total FROM orders) " +
+            "SELECT customer " +
+            "FROM orders, avg_total " +
+            "WHERE total > avg_total.avg_total",
         nativeQuery = true
     )
     List<Map<String, Object>> selectUserEmailsWithOrderMoreAvg();
